@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import ImagePlaceholder from "@/components/image-placeholder";
+import LugarSinFoto from "@/components/lugar-sin-foto";
 import {
   contactInfo,
   patrimonioBase,
@@ -132,7 +133,7 @@ export default function InicioPage() {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <ImagePlaceholder label={lugar.placeholder} />
+                    <LugarSinFoto nombre={lugar.nombre} />
                   )}
                 </div>
                 <div className="p-5">
@@ -160,7 +161,8 @@ export default function InicioPage() {
           {tramiteShortcuts.map((t) => (
             <Link
               key={t.letter}
-              href="/tramites"
+              href={t.href ?? "/tramites"}
+              {...(t.href ? { target: "_blank", rel: "noopener noreferrer" } : {})}
               className="rounded-2xl border border-[#DCE4DA] bg-white p-6.5 text-left"
             >
               <div className="mb-3.5 flex h-9.5 w-9.5 items-center justify-center rounded-[10px] bg-[#E8F3EC] font-(family-name:--font-lora) font-bold text-[#1F6B4A]">
@@ -168,6 +170,7 @@ export default function InicioPage() {
               </div>
               <div className="mb-1.5 text-base font-semibold text-[#1B2420]">
                 {t.title}
+                {t.href && <span className="ml-1 text-[#9DAFA4]">↗</span>}
               </div>
               <div className="text-sm leading-[1.5] text-[#5B6B63]">
                 {t.desc}

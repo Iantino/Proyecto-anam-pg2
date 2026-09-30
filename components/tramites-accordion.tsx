@@ -51,6 +51,16 @@ export default function TramitesAccordion({
                     {tram.note}
                   </div>
                 )}
+                {tram.enlace && (
+                  <a
+                    href={tram.enlace.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-block rounded-[9px] bg-[#1F6B4A] px-5 py-3 text-sm font-semibold text-white"
+                  >
+                    {tram.enlace.label} ↗
+                  </a>
+                )}
               </div>
             )}
           </div>

@@ -64,7 +64,7 @@ export default function SiteHeader() {
             href="/tramites"
             className="hidden rounded-[9px] bg-[#1F6B4A] px-5 py-2.5 text-sm font-semibold text-white md:inline-block"
           >
-            Trámites en línea
+            Ver trámites
           </Link>
           <button
             onClick={() => setMenuOpen((v) => !v)}

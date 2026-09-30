@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Lora, Work_Sans } from "next/font/google";
 import "./globals.css";
-import SiteHeader from "@/components/site-header";
-import SiteFooter from "@/components/site-footer";
+import ConditionalHeader from "@/components/conditional-header";
+import ConditionalFooter from "@/components/conditional-footer";
 
 const lora = Lora({
   variable: "--font-lora",
@@ -18,9 +18,18 @@ const workSans = Work_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://sanpablojocopilas.gob.gt"),
   title: "Municipalidad de San Pablo Jocopilas",
   description:
     "Sitio informativo de la Municipalidad de San Pablo Jocopilas, Suchitepéquez, Guatemala: trámites municipales, información del municipio y contacto.",
+  openGraph: {
+    title: "Municipalidad de San Pablo Jocopilas",
+    description:
+      "Trámites municipales, información del municipio y contacto de la Municipalidad de San Pablo Jocopilas, Suchitepéquez.",
+    images: ["/images/og-image.png"],
+    locale: "es_GT",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -34,9 +43,9 @@ export default function RootLayout({
       className={`${lora.variable} ${workSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#FBF9F3] font-(family-name:--font-work-sans) text-[#1B2420]">
-        <SiteHeader />
+        <ConditionalHeader />
         <main className="flex-1">{children}</main>
-        <SiteFooter />
+        <ConditionalFooter />
       </body>
     </html>
   );

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import ContactForm from "@/components/contact-form";
-import ImagePlaceholder from "@/components/image-placeholder";
 import { contactCards } from "@/lib/data";
 
 export const metadata: Metadata = {
@@ -41,10 +40,13 @@ export default function ContactoPage() {
             Ubicación
           </h2>
           <div className="relative h-80 overflow-hidden rounded-2xl border border-[#DCE4DA]">
-            <ImagePlaceholder label="Mapa de ubicación municipal" />
-            <div className="pointer-events-none absolute bottom-4 left-4 rounded-[10px] bg-[#163A2B]/90 px-3.5 py-2.5 text-[13px] text-white">
-              14°35′13″ N, 91°27′10″ O
-            </div>
+            <iframe
+              src="https://www.google.com/maps?q=14.586944,-91.452778&z=15&output=embed"
+              className="h-full w-full border-0"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Mapa de ubicación de la Municipalidad de San Pablo Jocopilas"
+            />
           </div>
           <p className="mt-3.5 text-[13.5px] leading-[1.6] text-[#5B6B63]">
             Calle principal, edificio municipal, cabecera municipal de San

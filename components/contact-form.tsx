@@ -3,16 +3,20 @@
 import { useState } from "react";
 import { asuntoOptions } from "@/lib/data";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
 const initialForm = {
   nombre: "",
   correo: "",
   asunto: asuntoOptions[0],
   mensaje: "",
+  sitio_web: "", // honeypot anti-spam: campo oculto, invisible para personas
 };
 
 export default function ContactForm() {
   const [form, setForm] = useState(initialForm);
   const [submitted, setSubmitted] = useState(false);
+  const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
 
   function updateForm(field: keyof typeof initialForm, value: string) {
@@ -20,14 +24,40 @@ export default function ContactForm() {
     setError("");
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     if (!form.nombre.trim() || !form.correo.trim() || !form.mensaje.trim()) {
       setError("Por favor completa nombre, correo y mensaje.");
       return;
     }
-    setSubmitted(true);
+
+    setEnviando(true);
     setError("");
+
+    try {
+      const res = await fetch(`${API_URL}/api/contacto`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "No se pudo enviar el mensaje.");
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo conectar con el servidor. Intenta de nuevo más tarde."
+      );
+    } finally {
+      setEnviando(false);
+    }
   }
 
   if (submitted) {
@@ -107,12 +137,27 @@ export default function ContactForm() {
           className="w-full resize-y rounded-[9px] border border-[#DCE4DA] px-3.5 py-3 text-[14.5px]"
         />
       </div>
+
+      {/* Honeypot: oculto con CSS, invisible y sin tabIndex para personas;
+          los bots que rellenan todos los campos automáticamente sí lo llenan. */}
+      <input
+        type="text"
+        value={form.sitio_web}
+        onChange={(e) => updateForm("sitio_web", e.target.value)}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="absolute left-[-9999px] h-0 w-0 opacity-0"
+      />
+
       {error && <div className="text-[13.5px] text-[#B3261E]">{error}</div>}
+
       <button
         type="submit"
-        className="self-start rounded-[9px] bg-[#1F6B4A] px-5.5 py-3.5 text-[15px] font-semibold text-white"
+        disabled={enviando}
+        className="self-start rounded-[9px] bg-[#1F6B4A] px-5.5 py-3.5 text-[15px] font-semibold text-white disabled:opacity-60"
       >
-        Enviar mensaje
+        {enviando ? "Enviando..." : "Enviar mensaje"}
       </button>
     </form>
   );

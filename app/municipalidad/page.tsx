@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import ImagePlaceholder from "@/components/image-placeholder";
+import LugarSinFoto from "@/components/lugar-sin-foto";
 import { datosTerritoriales, limites, patrimonioBase } from "@/lib/data";
 
 export const metadata: Metadata = {
@@ -81,7 +81,7 @@ export default function MunicipalidadPage() {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <ImagePlaceholder label={lugar.placeholder} />
+                <LugarSinFoto nombre={lugar.nombre} />
               )}
             </div>
             <div className="p-4.5">

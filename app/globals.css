@@ -1,26 +1,21 @@
 @import "tailwindcss";
 
+/*
+ * Este sitio usa una paleta institucional fija (verde, dorado, crema)
+ * definida directamente con clases de Tailwind en cada componente.
+ * A propósito NO seguimos el modo oscuro del sistema operativo:
+ * la Municipalidad necesita verse igual para todos los visitantes.
+ * "color-scheme: light" evita que el navegador aplique sus propios
+ * fondos/colores oscuros por defecto en áreas sin estilo explícito.
+ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-work-sans), Arial, Helvetica, sans-serif;
+  background-color: #FBF9F3;
+  background-image: url("/patterns/leaf-pattern.svg");
+  background-repeat: repeat;
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import TramitesAccordion from "@/components/tramites-accordion";
+import SolicitudTramiteForm from "@/components/solicitud-tramite-form";
 import { tramitesData } from "@/lib/data";
 
 export const metadata: Metadata = {
@@ -25,6 +26,17 @@ export default function TramitesPage() {
         trámite llamando al <strong>7792-6303</strong> o escribiendo al
         WhatsApp <strong>5717-2708</strong>.
       </p>
+
+      <div className="mb-12">
+        <h2 className="mb-1.5 font-(family-name:--font-lora) text-2xl font-bold">
+          Envía tu solicitud en línea
+        </h2>
+        <p className="mb-5 text-[14.5px] leading-[1.7] text-[#5B6B63]">
+          Regístrala directamente, sin necesidad de crear una cuenta. Te
+          contactaremos al correo o teléfono que nos compartas.
+        </p>
+        <SolicitudTramiteForm />
+      </div>
 
       <TramitesAccordion tramites={tramitesData} />
 

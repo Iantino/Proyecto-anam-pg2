@@ -1,7 +1,9 @@
 export const navItems = [
   { href: "/", label: "Inicio" },
   { href: "/municipalidad", label: "Municipalidad" },
+  { href: "/alcalde", label: "Alcalde" },
   { href: "/tramites", label: "Trámites" },
+  { href: "/transparencia", label: "Transparencia" },
   { href: "/contacto", label: "Contacto" },
 ];
 
@@ -31,41 +33,85 @@ export const patrimonioBase: Lugar[] = [
   {
     imgId: "patrimonio-portada",
     nombre: "La Portada de San Pablo Jocopilas",
-    desc: "Uno de los principales símbolos culturales del municipio.",
+    desc: "Fachada de la antigua iglesia colonial franciscana, lo único que sobrevivió al terremoto de Santa Marta de 1773. Fue reconocida en un certamen del Banco Industrial como una de las siete iglesias más maravillosas de Guatemala.",
     placeholder: "Foto de La Portada",
     imgSrc: "/images/portada-la-portada.webp",
   },
   {
-    imgId: "patrimonio-chocola",
-    nombre: "Sitio arqueológico de Chocolá",
-    desc: "Vestigios de asentamiento prehispánico dentro del municipio.",
-    placeholder: "Foto del sitio arqueológico",
+    imgId: "patrimonio-iglesia-chocola",
+    nombre: "Iglesia de Chocolá",
+    desc: "Templo de la aldea Chocolá, punto de reunión de la vida religiosa y comunitaria de sus habitantes.",
+    placeholder: "Foto de la iglesia de Chocolá",
+    imgSrc: "/images/iglesia-chocola.webp",
   },
+  // Las tres primeras tarjetas se muestran también en Inicio, por eso van
+  // primero los lugares que ya tienen fotografía.
   {
     imgId: "patrimonio-reloj",
     nombre: "Reloj hidráulico de Chocolá",
-    desc: "Antiguo reloj cuyo funcionamiento utiliza energía hidráulica.",
+    desc: "Antiguo reloj centenario construido en 1800, cuyo funcionamiento utiliza energía hidráulica.",
     placeholder: "Foto del reloj hidráulico",
+    imgSrc: "/images/reloj-hidraulico-chocola.webp",
   },
   {
     imgId: "patrimonio-ventana",
     nombre: "La Ventana",
     desc: "Conocida también como cueva de los murciélagos.",
     placeholder: "Foto de La Ventana",
+    imgSrc: "/images/la-ventana.webp",
+  },
+  {
+    imgId: "patrimonio-sitio-chocola",
+    nombre: "Sitio arqueológico de Chocolá",
+    desc: "Vestigios de asentamiento prehispánico dentro del municipio.",
+    placeholder: "Foto del sitio arqueológico",
+    imgSrc: "/images/sitio-arqueologico-chocola.webp",
   },
   {
     imgId: "patrimonio-piedrona",
     nombre: "La Piedrona de Chocolá",
     desc: "Lugar ceremonial de importancia comunitaria.",
     placeholder: "Foto de La Piedrona",
+    imgSrc: "/images/la-piedrona.webp",
+  },
+  {
+    imgId: "patrimonio-ixtacapa",
+    nombre: "Río Ixtacapa",
+    desc: "Punto turístico natural del municipio, muy visitado por sus pobladores durante los días de asueto.",
+    placeholder: "Foto del río Ixtacapa",
+    imgSrc: "/images/rio-ixtacapa.webp",
   },
 ];
 
-export const tramiteShortcuts = [
+// Portal oficial de Información Pública de la Municipalidad (Ley de Acceso a
+// la Información Pública, Decreto 57-2008). Las solicitudes de información
+// se hacen ahí y las atiende la Unidad de Información Pública (UIP), no el
+// formulario de trámites de este sitio.
+export const portalInformacionPublica = {
+  inicio: "https://munisanpablojocopilas.laip.gt/",
+  solicitudes:
+    "https://munisanpablojocopilas.laip.gt/index.php/informacion-publica/solicitudes-en-linea",
+  informacionDeOficio:
+    "https://munisanpablojocopilas.laip.gt/index.php/informacion-publica/informacion-de-oficio",
+};
+
+// Detecta el tipo de trámite "Información pública" por su nombre, para
+// redirigir al portal en lugar de registrarlo en el formulario interno.
+export function esTipoInformacionPublica(nombre: string) {
+  return /informaci[oó]n\s+p[uú]blica/i.test(nombre);
+}
+
+export const tramiteShortcuts: {
+  letter: string;
+  title: string;
+  desc: string;
+  href?: string; // si es externo se abre en otra pestaña
+}[] = [
   {
     letter: "A",
     title: "Información pública",
-    desc: "Solicita actas, presupuesto, reglamentos y más.",
+    desc: "Solicita actas, presupuesto, reglamentos y más en el portal oficial.",
+    href: portalInformacionPublica.solicitudes,
   },
   {
     letter: "B",
@@ -107,13 +153,14 @@ export type Tramite = {
   summary: string;
   items: string[];
   note?: string;
+  enlace?: { href: string; label: string }; // botón a un sitio externo
 };
 
 export const tramitesData: Tramite[] = [
   {
     id: "info-publica",
     title: "Solicitud de información pública",
-    summary: "Formulario en línea para consultar información municipal.",
+    summary: "Se solicita en el Portal de Información Pública de la Municipalidad.",
     items: [
       "Actas y acuerdos del Concejo Municipal.",
       "Información sobre autoridades, empleados y asesores municipales.",
@@ -122,7 +169,11 @@ export const tramitesData: Tramite[] = [
       "Reglamentos municipales.",
       "Trámites, requisitos y otra información pública.",
     ],
-    note: "Para el seguimiento se solicita nombre y correo electrónico, además de una descripción clara de la información requerida. DPI, teléfono y boleto de ornato son datos complementarios.",
+    note: "Las solicitudes de información pública las atiende la Unidad de Información Pública (UIP) a través del portal oficial, conforme a la Ley de Acceso a la Información Pública (Decreto 57-2008).",
+    enlace: {
+      href: portalInformacionPublica.solicitudes,
+      label: "Solicitar información en el portal oficial",
+    },
   },
   {
     id: "iusi",
@@ -182,8 +233,8 @@ export const tramitesData: Tramite[] = [
   },
   {
     id: "por-confirmar",
-    title: "Trámites que deben confirmarse directamente",
-    summary: "Requisitos y costos aún no verificados en el portal municipal.",
+    title: "Otros trámites y servicios municipales",
+    summary: "Consulta directamente los requisitos, costos y horarios vigentes para estos servicios.",
     items: [
       "Emisión y pago del boleto de ornato.",
       "Solicitud, traslado o reconexión del servicio de agua.",
@@ -199,7 +250,7 @@ export const tramitesData: Tramite[] = [
       "Registro o actualización de negocios.",
       "Denuncias y reportes sobre servicios municipales.",
     ],
-    note: "Para confirmar requisitos, costos, horarios y disponibilidad llama al 7792-6303 o escribe al WhatsApp 5717-2708.",
+    note: "Llámanos al 7792-6303 o escríbenos al WhatsApp 5717-2708 para conocer requisitos, costos y horarios actualizados de estos servicios.",
   },
 ];
 
