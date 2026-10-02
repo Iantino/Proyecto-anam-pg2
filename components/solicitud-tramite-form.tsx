@@ -22,14 +22,25 @@ export default function SolicitudTramiteForm() {
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
   const [codigo, setCodigo] = useState<string | null>(null);
+  const [estadoTipos, setEstadoTipos] = useState<"cargando" | "listo" | "vacio" | "error">("cargando");
 
   useEffect(() => {
-    apiFetch("/api/tipos-tramite").then((data) => {
-      setTipos(data);
-      if (data.length > 0) {
-        setForm((f) => ({ ...f, tipo_id: String(data[0].id) }));
-      }
-    });
+    apiFetch("/api/tipos-tramite")
+      .then((data: TipoTramite[]) => {
+        setTipos(data);
+        if (data.length > 0) {
+          setForm((f) => ({ ...f, tipo_id: String(data[0].id) }));
+          setEstadoTipos("listo");
+        } else {
+          // La API responde, pero la tabla tipos_tramite no tiene registros activos.
+          setEstadoTipos("vacio");
+        }
+      })
+      .catch((err) => {
+        // No hubo respuesta de la API (URL incorrecta, CORS o backend apagado).
+        console.error("No se pudieron cargar los tipos de trámite:", err);
+        setEstadoTipos("error");
+      });
   }, []);
 
   function updateForm(field: keyof typeof initialForm, value: string) {
@@ -40,8 +51,11 @@ export default function SolicitudTramiteForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    if (!form.tipo_id) {
+      setError("Selecciona el tipo de trámite.");
+      return;
+    }
     if (
-      !form.tipo_id ||
       !form.solicitante_nombre.trim() ||
       !form.solicitante_dpi.trim() ||
       !form.solicitante_correo.trim() ||
@@ -120,12 +134,28 @@ export default function SolicitudTramiteForm() {
         <select
           value={form.tipo_id}
           onChange={(e) => updateForm("tipo_id", e.target.value)}
-          className="w-full rounded-[9px] border border-[#DCE4DA] bg-white px-3.5 py-3 text-[14.5px]"
+          disabled={estadoTipos !== "listo"}
+          className="w-full rounded-[9px] border border-[#DCE4DA] bg-white px-3.5 py-3 text-[14.5px] disabled:bg-[#F4F6F3] disabled:text-[#9DAFA4]"
         >
+          {estadoTipos === "cargando" && <option value="">Cargando tipos de trámite...</option>}
+          {estadoTipos === "vacio" && <option value="">No hay tipos de trámite disponibles</option>}
+          {estadoTipos === "error" && <option value="">No se pudo cargar la lista</option>}
           {tipos.map((t) => (
             <option key={t.id} value={t.id}>{t.nombre}</option>
           ))}
         </select>
+        {estadoTipos === "vacio" && (
+          <p className="mt-2 text-[13px] text-[#B3261E]">
+            Por el momento no hay trámites habilitados para solicitar en línea.
+            Comunícate con la Municipalidad o intenta más tarde.
+          </p>
+        )}
+        {estadoTipos === "error" && (
+          <p className="mt-2 text-[13px] text-[#B3261E]">
+            No pudimos conectar con el sistema de la Municipalidad. Revisa tu
+            conexión o intenta de nuevo en unos minutos.
+          </p>
+        )}
       </div>
 
       {esInfoPublica ? (
@@ -228,7 +258,7 @@ export default function SolicitudTramiteForm() {
 
       <button
         type="submit"
-        disabled={enviando}
+        disabled={enviando || estadoTipos !== "listo"}
         className="self-start rounded-[9px] bg-[#1F6B4A] px-5.5 py-3.5 text-[15px] font-semibold text-white disabled:opacity-60"
       >
         {enviando ? "Enviando..." : "Enviar solicitud"}

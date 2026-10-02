@@ -12,7 +12,15 @@ type Documento = {
   tipo_mime: string;
   tamano: number;
   fecha_carga: string;
+  usuario_id: number;
+  subido_por: string | null;
 };
+
+function formatearTamano(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 type HistorialItem = {
   id: number;
@@ -42,7 +50,13 @@ type UsuarioLista = { id: number; nombre: string; usuario: string; rol: string; 
 
 export default function ExpedientePage() {
   const { id } = useParams<{ id: string }>();
-  const admin = esAdministrador(useSesion());
+  const sesion = useSesion();
+  const admin = esAdministrador(sesion);
+
+  // Eliminación de documentos (con confirmación en línea)
+  const [confirmandoId, setConfirmandoId] = useState<number | null>(null);
+  const [motivo, setMotivo] = useState("");
+  const [eliminando, setEliminando] = useState(false);
 
   const [expediente, setExpediente] = useState<Expediente | null>(null);
   const [estados, setEstados] = useState<Catalogo[]>([]);
@@ -157,6 +171,30 @@ export default function ExpedientePage() {
       setSubiendo(false);
     }
   }
+
+  async function handleEliminarDocumento(doc: Documento) {
+    setError("");
+    setAviso("");
+    setEliminando(true);
+    try {
+      await apiFetch(`/api/tramites/documentos/${doc.id}`, {
+        method: "DELETE",
+        body: JSON.stringify({ motivo }),
+      });
+      setConfirmandoId(null);
+      setMotivo("");
+      setAviso(`Documento "${doc.nombre_original}" eliminado.`);
+      await cargar();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo eliminar el documento.");
+    } finally {
+      setEliminando(false);
+    }
+  }
+
+  // El Administrador elimina cualquiera; el Operativo solo los que él subió
+  // (el backend aplica la misma regla).
+  const puedeEliminar = (doc: Documento) => admin || doc.usuario_id === sesion?.id;
 
   if (cargando) return <p className="text-sm text-[#5B6B63]">Cargando...</p>;
 
@@ -293,16 +331,74 @@ export default function ExpedientePage() {
         {expediente.documentos.length === 0 ? (
           <p className="text-[13.5px] text-[#5B6B63]">Sin documentos adjuntos.</p>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col divide-y divide-[#EEF2EC]">
             {expediente.documentos.map((d) => (
-              <li key={d.id} className="flex items-center justify-between text-[14px]">
-                <span className="text-[#3E4A44]">{d.nombre_original}</span>
-                <a
-                  href={`${API_URL}/api/tramites/documentos/${d.id}/descargar`}
-                  className="text-[13px] font-semibold text-[#1F6B4A]"
-                >
-                  Descargar
-                </a>
+              <li key={d.id} className="py-2.5 text-[14px]">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="break-all text-[#3E4A44]">{d.nombre_original}</div>
+                    <div className="text-[12px] text-[#9DAFA4]">
+                      Subido por {d.subido_por || "usuario eliminado"} · {d.fecha_carga} · {formatearTamano(d.tamano)}
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-4">
+                    <a
+                      href={`${API_URL}/api/tramites/documentos/${d.id}/descargar`}
+                      className="text-[13px] font-semibold text-[#1F6B4A]"
+                    >
+                      Descargar
+                    </a>
+                    {puedeEliminar(d) && confirmandoId !== d.id && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConfirmandoId(d.id);
+                          setMotivo("");
+                          setError("");
+                          setAviso("");
+                        }}
+                        className="text-[13px] font-semibold text-[#B3261E]"
+                      >
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {confirmandoId === d.id && (
+                  <div className="mt-2.5 rounded-xl border border-[#F2C9C5] bg-[#FDF1F0] p-3.5">
+                    <div className="mb-2 text-[13.5px] font-semibold text-[#B3261E]">
+                      ¿Eliminar “{d.nombre_original}”? Esta acción no se puede deshacer.
+                    </div>
+                    <input
+                      type="text"
+                      value={motivo}
+                      onChange={(e) => setMotivo(e.target.value)}
+                      maxLength={500}
+                      placeholder="Motivo (opcional), p. ej. archivo equivocado"
+                      className="mb-2.5 w-full rounded-lg border border-[#E7B9B4] bg-white px-3 py-2 text-[13.5px]"
+                    />
+                    {error && <div className="mb-2.5 text-[13px] text-[#B3261E]">{error}</div>}
+                    <div className="flex gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => handleEliminarDocumento(d)}
+                        disabled={eliminando}
+                        className="rounded-lg bg-[#B3261E] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
+                      >
+                        {eliminando ? "Eliminando..." : "Sí, eliminar"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmandoId(null)}
+                        disabled={eliminando}
+                        className="rounded-lg border border-[#DCE4DA] bg-white px-4 py-2 text-[13px] font-semibold text-[#3E4A44]"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -315,7 +411,12 @@ export default function ExpedientePage() {
           {expediente.historial.map((h) => (
             <div key={h.id} className="border-l-2 border-[#DCE4DA] pl-4 text-[13.5px]">
               <div className="font-semibold text-[#1B2420]">
-                {h.estado_anterior ? `${h.estado_anterior} → ${h.estado_nuevo}` : h.estado_nuevo}
+                {h.estado_anterior && h.estado_anterior !== h.estado_nuevo
+                  ? `${h.estado_anterior} → ${h.estado_nuevo}`
+                  : h.estado_nuevo}
+                {h.estado_anterior === h.estado_nuevo && (
+                  <span className="ml-1.5 font-normal text-[#9DAFA4]">· sin cambio de estado</span>
+                )}
               </div>
               <div className="text-[#5B6B63]">
                 {h.usuario} · {h.fecha}
