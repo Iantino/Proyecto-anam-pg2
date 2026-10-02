@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { apiFetch, apiUpload, API_URL } from "@/lib/api";
+import { apiFetch, apiUpload, apiBlob } from "@/lib/api";
 
 type Biografia = {
   nombre_completo: string;
@@ -76,6 +76,29 @@ export default function AdminAlcaldePage() {
   const [subiendo, setSubiendo] = useState(false);
   const [avisoFoto, setAvisoFoto] = useState("");
   const [errorFoto, setErrorFoto] = useState("");
+  const [fotoUrl, setFotoUrl] = useState<string | null>(null);
+
+  // La vista previa se descarga con la sesión del panel: si la biografía aún
+  // no está publicada, la API solo entrega la foto a un Administrador, y un
+  // <img src> directo a otro dominio no enviaría la cookie de sesión.
+  useEffect(() => {
+    if (!tieneFoto) return;
+    let url: string | null = null;
+    let cancelado = false;
+    apiBlob(`/api/alcalde/foto?v=${encodeURIComponent(versionFoto)}`)
+      .then(({ blob }) => {
+        if (cancelado) return;
+        url = URL.createObjectURL(blob);
+        setFotoUrl(url);
+      })
+      .catch(() => {
+        if (!cancelado) setFotoUrl(null);
+      });
+    return () => {
+      cancelado = true;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [tieneFoto, versionFoto]);
 
   useEffect(() => {
     apiFetch("/api/alcalde/admin")
@@ -197,10 +220,10 @@ export default function AdminAlcaldePage() {
         <Tarjeta titulo="Fotografía oficial" descripcion="JPG, PNG o WEBP de máximo 5 MB. Se recomienda una foto vertical.">
           <div className="flex flex-wrap items-center gap-5">
             <div className="h-40 w-32 shrink-0 overflow-hidden rounded-xl border border-[#DCE4DA] bg-[#F0F5EE]">
-              {tieneFoto ? (
+              {tieneFoto && fotoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={`${API_URL}/api/alcalde/foto?v=${encodeURIComponent(versionFoto)}`}
+                  src={fotoUrl}
                   alt="Foto actual del alcalde"
                   className="h-full w-full object-cover"
                 />

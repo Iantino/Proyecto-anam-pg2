@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch, API_URL } from "@/lib/api";
+import { apiFetch, apiDownload } from "@/lib/api";
 
 type ConteoItem = { estado?: string; tipo?: string; total: number };
 type Reporte = {
@@ -42,6 +42,8 @@ export default function AdminReportesPage() {
   const [desde, setDesde] = useState("");
   const [hasta, setHasta] = useState("");
   const [cargando, setCargando] = useState(true);
+  const [exportando, setExportando] = useState<"" | "csv" | "excel">("");
+  const [errorExportar, setErrorExportar] = useState("");
 
   async function cargar(desdeVal?: string, hastaVal?: string) {
     setCargando(true);
@@ -74,20 +76,24 @@ export default function AdminReportesPage() {
     cargar();
   }
 
-  function urlExportar() {
+  async function exportar(formato: "csv" | "excel") {
     const params = new URLSearchParams();
     if (desde) params.set("desde", desde);
     if (hasta) params.set("hasta", hasta);
     const query = params.toString() ? `?${params.toString()}` : "";
-    return `${API_URL}/api/reportes/tramites/exportar${query}`;
-  }
+    const ruta = formato === "csv" ? "exportar" : "exportar-excel";
+    const hoy = new Date().toLocaleDateString("en-CA"); // AAAA-MM-DD en hora local
+    const nombre = `reporte_tramites_${hoy}.${formato === "csv" ? "csv" : "xlsx"}`;
 
-  function urlExportarExcel() {
-    const params = new URLSearchParams();
-    if (desde) params.set("desde", desde);
-    if (hasta) params.set("hasta", hasta);
-    const query = params.toString() ? `?${params.toString()}` : "";
-    return `${API_URL}/api/reportes/tramites/exportar-excel${query}`;
+    setErrorExportar("");
+    setExportando(formato);
+    try {
+      await apiDownload(`/api/reportes/tramites/${ruta}${query}`, nombre);
+    } catch (err) {
+      setErrorExportar(err instanceof Error ? err.message : "No se pudo exportar el reporte.");
+    } finally {
+      setExportando("");
+    }
   }
 
   return (
@@ -131,20 +137,25 @@ export default function AdminReportesPage() {
               Limpiar
             </button>
           )}
-          <a
-            href={urlExportar()}
-            className="rounded-lg border border-[#DCE4DA] bg-white px-4 py-2 text-sm font-semibold text-[#3E4A44]"
+          <button
+            type="button"
+            onClick={() => exportar("csv")}
+            disabled={exportando !== ""}
+            className="rounded-lg border border-[#DCE4DA] bg-white px-4 py-2 text-sm font-semibold text-[#3E4A44] disabled:opacity-60"
           >
-            ⬇ Exportar CSV
-          </a>
-          <a
-            href={urlExportarExcel()}
-            className="rounded-lg border border-[#DCE4DA] bg-white px-4 py-2 text-sm font-semibold text-[#3E4A44]"
+            {exportando === "csv" ? "Exportando..." : "⬇ Exportar CSV"}
+          </button>
+          <button
+            type="button"
+            onClick={() => exportar("excel")}
+            disabled={exportando !== ""}
+            className="rounded-lg border border-[#DCE4DA] bg-white px-4 py-2 text-sm font-semibold text-[#3E4A44] disabled:opacity-60"
           >
-            ⬇ Exportar Excel
-          </a>
+            {exportando === "excel" ? "Exportando..." : "⬇ Exportar Excel"}
+          </button>
         </form>
       </div>
+      {errorExportar && <div className="mb-4 text-[13.5px] text-[#B3261E]">{errorExportar}</div>}
 
       {cargando || !reporte ? (
         <p className="text-sm text-[#5B6B63]">Cargando...</p>

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { apiFetch, apiUpload, API_URL } from "@/lib/api";
+import { apiFetch, apiUpload, apiDownload } from "@/lib/api";
 import { useSesion, esAdministrador } from "@/lib/sesion";
 
 type Documento = {
@@ -57,6 +57,7 @@ export default function ExpedientePage() {
   const [confirmandoId, setConfirmandoId] = useState<number | null>(null);
   const [motivo, setMotivo] = useState("");
   const [eliminando, setEliminando] = useState(false);
+  const [descargandoId, setDescargandoId] = useState<number | null>(null);
 
   const [expediente, setExpediente] = useState<Expediente | null>(null);
   const [estados, setEstados] = useState<Catalogo[]>([]);
@@ -169,6 +170,18 @@ export default function ExpedientePage() {
       setError(err instanceof Error ? err.message : "No se pudo subir el documento.");
     } finally {
       setSubiendo(false);
+    }
+  }
+
+  async function handleDescargar(doc: Documento) {
+    setError("");
+    setDescargandoId(doc.id);
+    try {
+      await apiDownload(`/api/tramites/documentos/${doc.id}/descargar`, doc.nombre_original);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo descargar el documento.");
+    } finally {
+      setDescargandoId(null);
     }
   }
 
@@ -342,12 +355,14 @@ export default function ExpedientePage() {
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-4">
-                    <a
-                      href={`${API_URL}/api/tramites/documentos/${d.id}/descargar`}
-                      className="text-[13px] font-semibold text-[#1F6B4A]"
+                    <button
+                      type="button"
+                      onClick={() => handleDescargar(d)}
+                      disabled={descargandoId === d.id}
+                      className="text-[13px] font-semibold text-[#1F6B4A] disabled:opacity-60"
                     >
-                      Descargar
-                    </a>
+                      {descargandoId === d.id ? "Descargando..." : "Descargar"}
+                    </button>
                     {puedeEliminar(d) && confirmandoId !== d.id && (
                       <button
                         type="button"
