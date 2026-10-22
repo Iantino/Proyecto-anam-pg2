@@ -13,10 +13,12 @@ type Contenido = {
   contenido: string;
   categoria: string | null;
   fecha_actualizacion: string;
+  fotos?: { id: number; nombre_original: string }[];
 };
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
 async function obtenerContenido(): Promise<Contenido[]> {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
   try {
     const res = await fetch(`${API_URL}/api/informacion-publica`, {
       cache: "no-store",
@@ -107,6 +109,36 @@ export default async function TransparenciaPage() {
               <p className="mb-3 text-[14.5px] leading-[1.7] whitespace-pre-line text-[#3E4A44]">
                 {item.contenido}
               </p>
+              {item.fotos && item.fotos.length > 0 && (
+                <div
+                  className={`mb-4 grid gap-2.5 ${
+                    item.fotos.length === 1 ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-3"
+                  }`}
+                >
+                  {item.fotos.map((foto, i) => {
+                    const src = `${API_URL}/api/informacion-publica/fotos/${foto.id}`;
+                    return (
+                      <a
+                        key={foto.id}
+                        href={src}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`block overflow-hidden rounded-xl bg-[#F0F5EE] ${
+                          item.fotos!.length === 1 ? "aspect-video" : "aspect-4/3"
+                        }`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={src}
+                          alt={`${item.titulo} — foto ${i + 1}`}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.03]"
+                        />
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
               <div className="text-[12.5px] text-[#9DAFA4]">
                 Actualizado: {item.fecha_actualizacion}
               </div>
