@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { apiFetch, apiUpload, apiBlob } from "@/lib/api";
+import { useSesion, esAdministrador } from "@/lib/sesion";
 
 type Foto = { id: number; nombre_original: string };
 
@@ -106,6 +107,7 @@ function Miniatura({
 }
 
 export default function AdminInformacionPublicaPage() {
+  const admin = esAdministrador(useSesion());
   const [items, setItems] = useState<Contenido[]>([]);
   const [cargando, setCargando] = useState(true);
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -278,6 +280,22 @@ export default function AdminInformacionPublicaPage() {
       setError(err instanceof Error ? err.message : "No se pudo guardar.");
     } finally {
       setGuardando(false);
+    }
+  }
+
+  async function handleEliminar(item: Contenido) {
+    const fotos = item.fotos?.length
+      ? ` y sus ${item.fotos.length} ${item.fotos.length === 1 ? "foto" : "fotos"}`
+      : "";
+    if (!window.confirm(`¿Eliminar "${item.titulo}"${fotos}? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+    try {
+      await apiFetch(`/api/informacion-publica/${item.id}`, { method: "DELETE" });
+      if (form.id === item.id) cerrarForm();
+      await cargar();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "No se pudo eliminar.");
     }
   }
 
@@ -476,6 +494,14 @@ export default function AdminInformacionPublicaPage() {
               >
                 {item.estado === "publicado" ? "Pasar a borrador" : "Publicar"}
               </button>
+              {admin && (
+                <button
+                  onClick={() => handleEliminar(item)}
+                  className="ml-auto text-[13px] font-semibold text-[#B3261E]"
+                >
+                  Eliminar
+                </button>
+              )}
             </div>
           </div>
         ))}
